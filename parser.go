@@ -7,10 +7,7 @@ import (
     "reflect"
 )
 
-type (
-    Parameter map[string]interface{}
-    nodeType  int
-)
+type nodeType  int
 
 const (
     insertNode = "insert"

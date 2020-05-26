@@ -15,13 +15,6 @@ type Session interface{
     Close() error
 }
 
-type Result map[string]interface{}
-
-type Affection struct {
-    Rows int64
-    LastInsertID int64
-}
-
 type mySQLSession struct {
     driveName string
     builder builder
