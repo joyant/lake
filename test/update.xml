@@ -1,0 +1,28 @@
+<mapper namespace="user">
+    <update id="updateNameById">
+        update user
+        set name = #{name}
+        where id >= #{id}
+    </update>
+
+    <update id="updateNameById2">
+        update user
+        <set>
+            <if test="name != nil">
+                name = #{name},
+            </if>
+            <if test="age != empty">
+                age = #{age},
+            </if>
+        </set>
+        <if test="id != nil">
+            where
+            <if test="eq != nil">
+                id >= #{id}
+            </if>
+            <if test="eq == nil">
+                id > #{id}
+            </if>
+        </if>
+    </update>
+</mapper>

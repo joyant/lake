@@ -1,0 +1,74 @@
+<mapper namespace="opn">
+    <select id="search">
+        select tmp.*, group_concat(distinct rd.type) as m_types from ( select distinct l.id,
+        l.id lesson_id, l.name, l.name lesson_name, l.abstract, l.cover, l.config_name, lv.level,
+        case when l.pro_priv &amp; #{pro_id} = #{pro_id} then true else false end pro_priv,
+        case when l.auditing &amp; #{pro_id} = #{pro_id} then true else false end auditing,
+        case when l.publish &amp; #{pro_id} = #{pro_id} then true else false end publish,
+        case when l.freeflag &amp; #{pro_id} = #{pro_id} then true else false end freeflag,
+        case when count(distinct r.id) > 0 then true else false end dynamic,
+        case when count(distinct lk.id) > 0 then true else false end knowledge,
+        s.sort,
+        s.page,
+        group_concat(distinct lo.opern_id) opern_id,
+        group_concat(distinct o.name) opern_name,
+        group_concat(distinct o.artist_id) artist_id,
+        group_concat(distinct a.name) artist_name,
+        group_concat(distinct r.id) r
+        <if test="withCollection != empty">
+            ,group_concat(distinct c.id) collection_id,
+            group_concat(distinct c.name) collection_name,
+            group_concat(distinct c.cover) collection_cover,
+            group_concat(distinct lk.l_show_name) knowledge_show_name
+        </if>
+        from opn_lesson l
+        inner join opn_collection_sub s on s.sub_type = #{sub_type} and s.sub_id = l.id
+        inner join opn_collection c on s.collection_id = c.id  and c.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{auditing} or #{auditing} and c.auditing &amp; #{pro_id} = #{pro_id})
+        and (not #{publish} or #{publish} and c.publish &amp; #{pro_id} = #{pro_id})
+        left join opn_lesson_opern lo on l.id = lo.lesson_id
+        left join opn_opern o on lo.opern_id = o.id
+        left join opn_artist a on o.artist_id = a.id
+        left join kno_lesson_kn lk on lk.lesson_id = l.id and lk.pro_id = #{pro_id}
+        left join opn_lesson_level lv on lv.pro_id = #{pro_id} and lv.lesson_id = l.id
+        left join opn_pro_pack_config p on p.pro_id = #{pro_id}
+        left join opn_prores_config f on f.prod_id = #{pro_id} and f.prod_ver = #{pro_ver} and f.res_type = p.dynamic_type
+        left join opn_resource r on r.parent_type = s.sub_type and r.parent_id = s.sub_id and r.type = p.dynamic_type
+        and r.disable = #{disable} and r.ver between ifnull(f.res_min_ver, 0) and ifnull(f.res_max_ver, 999999999)
+        where (not #{collection_id} or #{collection_id} and s.collection_id = #{collection_id}) and l.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{auditing} or #{auditing} and l.auditing &amp; #{pro_id} = #{pro_id})
+        and (not #{publish} or #{publish} and l.publish &amp; #{pro_id} = #{pro_id})
+        <if test="keyword != empty">
+            <if test="searchAuthor != empty">
+                and ( l.keyword like #{keyword} or a.keyword like #{keyword} )
+            </if>
+            <if test="searchAuthor == empty">
+                and (l.keyword like #{keyword})
+            </if>
+        </if>
+        <if test="withCollection != empty and searchCollection != empty and collectionKeyword != empty">
+            and c.keyword like #{collectionKeyword}
+        </if>
+        <if test="lessonIds != empty">
+            and l.id in
+            <foreach collection="lessonIds">
+                #{item}
+            </foreach>
+        </if>
+        group by l.id, s.sort ) as tmp
+        inner join opn_collection_sub s1 on s1.sub_type = #{sub_type} and s1.sub_id = tmp.id
+        left join opn_prores_config fd on fd.prod_id = #{pro_id} and fd.prod_ver = #{pro_ver}
+        left join opn_resource rd on rd.parent_type = s1.sub_type and rd.parent_id = s1.sub_id and rd.disable = #{disable}
+        and (fd.res_type is null or rd.type is null or rd.type = fd.res_type) and rd.ver between ifnull(fd.res_min_ver, 0)
+        and ifnull(fd.res_max_ver, 999999999)
+        <if test="newTypeFlagArr != empty">
+            and rd.type in
+            <foreach collection="newTypeFlagArr">
+                #{item}
+            </foreach>
+        </if>
+        group by tmp.id
+        order by tmp.sort ASC
+        limit #{startRow}, #{pageSize}
+    </select>
+</mapper>

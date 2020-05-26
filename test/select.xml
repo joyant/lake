@@ -1,0 +1,81 @@
+<mapper namespace="user">
+    <select id="getByLimit">
+        select * from user
+        <if test="limit != empty">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="getById">
+        select * from user
+        <where>
+            <if test="id != empty">
+                id = #{id}
+            </if>
+            <if test="name != nil">
+                and name = #{name}
+            </if>
+            <if test="age != nil">
+                and age = #{age}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByNameOrAge">
+        select * from user
+        where
+        <choose>
+            <when test="name != nil">
+                name = #{name}
+            </when>
+            <when test="age != nil">
+                age = #{age}
+            </when>
+            <otherwise>
+                id > #{minID}
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectInID">
+        select id, name, age from user
+        where id in
+        <foreach item="item" index="index" collection="ids" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="selectByMultipleCondition">
+        select id, name, age
+        from
+        <if test="table != nil">
+            #{table}
+        </if>
+        where
+        <if test="ids != nil">
+            id in
+            <foreach collection="ids">
+                #{item}
+            </foreach>
+        </if>
+        <choose>
+            <when test="age != nil">
+                and age >= #{age}
+            </when>
+            <otherwise>
+                and id > 0
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectNormal">
+        select * from user
+        where name like #{name}
+    </select>
+
+    <select id="selectCount">
+        select count(*) count
+        from
+        (<include refid="selectNormal" />) sa
+    </select>
+</mapper>

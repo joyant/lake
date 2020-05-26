@@ -1,0 +1,36 @@
+<mapper namespace="user">
+    <insert id="saveUser">
+        insert into user
+        <set>
+            <if test="name != nil">
+                name = #{name},
+            </if>
+            <if test="age != nil">
+                age = #{age}
+            </if>
+        </set>
+    </insert>
+
+    <insert id="batchSave">
+        insert into user
+        (name, age)
+        values
+        <foreach item="item" collection="users">
+            #{item.name}, #{item.age}
+        </foreach>
+    </insert>
+
+    <insert id="ifBatchSave">
+        insert into user
+        (name, age)
+        values
+        <if test="users != empty">
+            <foreach item="item" collection="users">
+                #{item.name}, #{item.age}
+            </foreach>
+        </if>
+        <if test="users == empty">
+            ('good_enough', 11)
+        </if>
+    </insert>
+</mapper>

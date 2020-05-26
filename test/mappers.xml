@@ -1,0 +1,7 @@
+<mappers>
+    <mapper resource="./test/select.xml" />
+    <mapper resource="./test/insert.xml" />
+    <mapper resource="./test/update.xml" />
+    <mapper resource="./test/delete.xml" />
+    <mapper resource="./test/opn.xml" />
+</mappers>
