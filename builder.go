@@ -1,4 +1,4 @@
-package main
+package lake
 
 type builder interface {
     build(stmt []byte, argv Parameter)(sql string, params []interface{}, err error)

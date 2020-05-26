@@ -1,4 +1,4 @@
-package main
+package lake
 
 type defaultMap map[string]string
 

@@ -1,4 +1,4 @@
-package main
+package lake
 
 var drives = []string{MySQLDrive}
 
