@@ -6,7 +6,7 @@ import (
     "testing"
 )
 
-var testSession sessionInterface
+var testSession Session
 
 func init()  {
     var err error

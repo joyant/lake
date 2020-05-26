@@ -6,7 +6,7 @@ import (
     "time"
 )
 
-type sessionInterface interface{
+type Session interface{
     Select(key string, argv Parameter) (results []Result, err error)
     SelectOne(key string, argv Parameter) (results Result, err error)
     Insert(key string, argv Parameter) (act Affection, err error)
@@ -29,7 +29,7 @@ type mySQLSession struct {
     option *Option
 }
 
-func NewSession(driveName, dataSourceName string, option *Option) (sessionInterface, error) {
+func NewSession(driveName, dataSourceName string, option *Option) (Session, error) {
     if option == nil {
         option = &Option{}
     }
