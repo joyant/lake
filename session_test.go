@@ -136,6 +136,7 @@ func TestSelectApp(t *testing.T)  {
         "auditing":0,
         "sub_type":1,
         "pro_ver":"5.1.0",
+        "newTypeFlagArr":[]string{"mmusic", "mmusicconfig"},
     }
     results, err := testSession.Select("user.getAppList", p)
     if err != nil {

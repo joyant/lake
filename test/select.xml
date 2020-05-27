@@ -49,7 +49,7 @@
         select id, name, age
         from
         <if test="table != nil">
-            #{table}
+            ${table}
         </if>
         where
         <if test="ids != nil">
@@ -66,6 +66,7 @@
                 and id > 0
             </otherwise>
         </choose>
+        limit ${from}, ${offset}
     </select>
 
     <select id="selectNormal">
@@ -94,7 +95,7 @@
                 and rd.parent_id = s1.sub_id and rd.disable = #{disable}
                 and (fd.res_type is null or rd.type is null or rd.type = fd.res_type)
                 and rd.ver between ifnull(fd.res_min_ver, 0) and ifnull(fd.res_max_ver, 999999999)
-                where tmp.id = cc1.category_id and rd.type = #{item} ) as #{item}
+                where tmp.id = cc1.category_id and rd.type = #{item} ) as ${item}
             </foreach>
         </if>
         from (select distinct g.id, g.name, g.cover, g.abstract, g.pro_id, n.pro_name, g.sort, g.disable,

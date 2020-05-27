@@ -69,6 +69,6 @@
         </if>
         group by tmp.id
         order by tmp.sort ASC
-        limit #{startRow}, #{pageSize}
+        limit ${startRow}, ${pageSize}
     </select>
 </mapper>

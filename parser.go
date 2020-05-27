@@ -264,10 +264,11 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
         return nil, nil
     }
 
-    likeSlice := s.params[co] // make be it is a slice, so named likeSlice
+    likeSlice := s.params[co] // maybe it is a slice, so named likeSlice
     buff := bytes.Buffer{}
     inner := s.nodes[from+1].content
     item := []byte(fmt.Sprintf("#{%s}", attrMap.get("item", "item")))
+    item2 := []byte(fmt.Sprintf("${%s}", attrMap.get("item", "item")))
     if reflect.TypeOf(likeSlice).Kind().String() != "slice" {
         return nil, errorF(errNeedSlice, a.name)
     }
@@ -287,6 +288,7 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
                     return nil, errors.New("need format like item.key")
                 }
                 bs = bytes.Replace(bs, []byte("#{"+keyValue+"}"), []byte(fmt.Sprintf("#{%s.%d.%s}", co, i, value)), -1)
+                bs = bytes.Replace(bs, []byte("${"+keyValue+"}"), []byte(fmt.Sprintf("${%s.%d.%s}", co, i, value)), -1)
             }
             buff.Write(bs)
             buff.WriteString(attrMap.get("close", ")"))
@@ -298,6 +300,7 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
         buff.WriteString(attrMap.get("open", "("))
         for i, l := 0, sliceLen; i < l; i++ {
             b := bytes.Replace(inner, item, []byte(fmt.Sprintf("#{%s.%d}", co, i)), -1)
+            b = bytes.Replace(b, item2, []byte(fmt.Sprintf("${%s.%d}", co, i)), -1)
             buff.Write(b)
             if i < l-1 {
                 buff.WriteString(attrMap.get("separator", ","))
@@ -333,7 +336,7 @@ func (s *stack)parseInclude(from, to int) (sql []byte, err error) {
 
 func findPlaceholder(b []byte) (keys []string) {
     for i, l := 0, len(b); i < l; {
-        if b[i] == '#' && i < l && b[i+1] == '{' {
+        if (b[i] == '#' || b[i] == '$') && i < l && b[i+1] == '{' {
             for j := i + 2; j < l; j++ {
                 if b[j] == '}' {
                     keys = append(keys, string(b[i+2:j]))

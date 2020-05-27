@@ -162,6 +162,8 @@ func TestSelectComplex(t *testing.T)  {
         "table":"user",
         "ids":[]string{"1", "2", "3"},
         "age":11,
+        "from":0,
+        "offset":10,
     }
     stmt, err := sk.Parse()
     if err != nil {
@@ -172,8 +174,10 @@ func TestSelectComplex(t *testing.T)  {
     if err != nil {
         t.Errorf("build err:%v", err)
     }
+    lastSQL := builder.lastSQL(sql, params)
     fmt.Println("sql:", sql)
     fmt.Println("params:", params)
+    fmt.Println("lastSQL:", lastSQL)
 }
 
 func TestInsert1(t *testing.T)  {

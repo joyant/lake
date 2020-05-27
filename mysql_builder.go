@@ -14,7 +14,8 @@ type mySQLBuilder struct {}
 func (b *mySQLBuilder)build(stmt []byte, argv Parameter) (sql string, params []interface{}, err error) {
     buff := bytes.Buffer{}
     for i, l := 0, len(stmt); i < l; {
-        if stmt[i] == '#' && i+1 < l && stmt[i+1] == '{' {
+        s := stmt[i]
+        if (s == '#' || s == '$') && i+1 < l && stmt[i+1] == '{' {
             for j := i+2; j < l; j++ {
                 if stmt[j] == '}' {
                     key, value := splitKeyValue(stmt[i+2:j])
@@ -24,18 +25,34 @@ func (b *mySQLBuilder)build(stmt []byte, argv Parameter) (sql string, params []i
                     }
                     switch value.(type) {
                     case nil:
-                        params = append(params, argv[key])
+                        if s == '#' {
+                            params = append(params, argv[key])
+                        } else {
+                            buff.WriteString(fmt.Sprintf("%v", argv[key]))
+                        }
                     case int:
-                        params = append(params, reflect.ValueOf(argv[key]).Index(value.(int)).Interface())
+                        v := reflect.ValueOf(argv[key]).Index(value.(int)).Interface()
+                        if s == '#' {
+                            params = append(params, v)
+                        } else {
+                            buff.WriteString(fmt.Sprintf("%v", v))
+                        }
                     case string: // item.0.key
                         v := value.(string)
                         if dot := strings.IndexByte(v, '.'); dot > -1 {
                             index, err := strconv.Atoi(v[:dot])
                             panicErrNotNil(err)
-                            params = append(params, reflect.ValueOf(argv[key]).Index(index).Interface().(map[string]interface{})[v[dot+1:]])
+                            vv := reflect.ValueOf(argv[key]).Index(index).Interface().(map[string]interface{})[v[dot+1:]]
+                            if s == '#' {
+                                params = append(params, vv)
+                            } else {
+                                buff.WriteString(fmt.Sprintf("%v", vv))
+                            }
                         }
                     }
-                    buff.WriteByte('?')
+                    if s == '#' {
+                        buff.WriteByte('?')
+                    }
                     i = j + 1
                     break
                 }
@@ -48,18 +65,9 @@ func (b *mySQLBuilder)build(stmt []byte, argv Parameter) (sql string, params []i
     return buff.String(), params, nil
 }
 
-func addQuotation(v interface{}) string {
-    switch v.(type) {
-    case int8, int16, int, int32, int64, uint8, uint16, uint32, uint64:
-        return fmt.Sprintf("%d", v)
-    default:
-        return fmt.Sprintf("'%v'", v)
-    }
-}
-
 func (*mySQLBuilder)lastSQL(sql string, params []interface{}) string {
     for _, v := range params {
-        sql = strings.Replace(sql, "?", addQuotation(v), 1)
+        sql = strings.Replace(sql, "?", fmt.Sprintf("'%v'", v), 1)
     }
     return sql
 }
