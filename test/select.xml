@@ -78,4 +78,51 @@
         from
         (<include refid="selectNormal" />) sa
     </select>
+
+    <select id="getAppList">
+        select tmp.*
+        <if test="newTypeFlagArr != empty">
+            ,
+            <foreach collection="newTypeFlagArr" open="" close="" separator=",">
+                exists(select * from opn_category_collection cc1
+                left join opn_collection c1 on cc1.collection_id = c1.id  and c1.pro_priv &amp; #{pro_id} = #{pro_id}
+                and (not #{publish} or #{publish} and c1.publish &amp; #{pro_id} = #{pro_id})
+                and (not #{auditing} or #{auditing} and c1.auditing &amp; #{pro_id} = #{pro_id})
+                left join opn_collection_sub s1 on cc1.collection_id = s1.collection_id and s1.sub_type = #{sub_type}
+                left join opn_prores_config fd on fd.prod_id = #{pro_id} and fd.prod_ver = #{pro_ver}
+                left join opn_resource rd on rd.parent_type = s1.sub_type
+                and rd.parent_id = s1.sub_id and rd.disable = #{disable}
+                and (fd.res_type is null or rd.type is null or rd.type = fd.res_type)
+                and rd.ver between ifnull(fd.res_min_ver, 0) and ifnull(fd.res_max_ver, 999999999)
+                where tmp.id = cc1.category_id and rd.type = #{item} ) as #{item}
+            </foreach>
+        </if>
+        from (select distinct g.id, g.name, g.cover, g.abstract, g.pro_id, n.pro_name, g.sort, g.disable,
+        count(distinct c.id) collection_count,
+        count(distinct l.id) lesson_count,
+        case when count(distinct case when c.auditing &amp; #{pro_id} = #{pro_id} then c.id else null end) > 0 then true else false end auditing,
+        case when count(distinct case when c.publish &amp; #{pro_id} = #{pro_id} then c.id else null end) > 0 then true else false end publish,
+        case when count(distinct case when l.freeflag &amp; #{pro_id} = #{pro_id} then l.id else null end) > 0 then true else false end freeflag,
+        case when count(distinct r.id) > 0 then true else false end dynamic
+        from opn_category g
+        left join opn_pro n using (pro_id)
+        left join opn_category_collection cc on g.id = cc.category_id
+        left join opn_collection c on cc.collection_id = c.id  and c.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{publish} or #{publish} and c.publish &amp; #{pro_id} = #{pro_id})
+        and (not #{auditing} or #{auditing} and c.auditing &amp; #{pro_id} = #{pro_id})
+        left join opn_collection_sub s on cc.collection_id = s.collection_id and s.sub_type = #{sub_type}
+        left join opn_lesson l on s.sub_id = l.id and l.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{publish} or #{publish} and l.publish &amp; #{pro_id} = #{pro_id})
+        and (not #{auditing} or #{auditing} and l.auditing &amp; #{pro_id} = #{pro_id})
+        left join opn_pro_pack_config p on p.pro_id = g.pro_id
+        left join opn_prores_config f on f.prod_id = #{pro_id} and f.prod_ver = #{pro_ver} and f.res_type = p.dynamic_type
+        left join opn_resource r on r.parent_type = s.sub_type and r.parent_id = s.sub_id and r.type = p.dynamic_type
+        and r.disable = #{disable} and r.ver between ifnull(f.res_min_ver, 0) and ifnull(f.res_max_ver, 999999999)
+        where g.disable = #{disable} and g.pro_id = #{pro_id}
+        and (not #{parent_id} and g.parent_id is null or #{parent_id} and g.parent_id = #{parent_id} )
+        and (not #{publish} or #{publish} and g.publish &amp; #{pro_id} = #{pro_id} )
+        and (not #{auditing} or #{auditing} and g.auditing &amp; #{pro_id} = #{pro_id})
+        group by g.id, n.id ) as tmp
+        order by tmp.pro_id asc, tmp.sort asc
+    </select>
 </mapper>

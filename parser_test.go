@@ -379,3 +379,14 @@ func TestSelectCount(t *testing.T)  {
     fmt.Println("sql:", sql)
     fmt.Println("params:", params)
 }
+
+func TestRestrainTrim(t *testing.T)  {
+    b := restrainTrim([]byte("        test \n     abd    \r       test      \t"))
+    if string(b) != "test abd test" {
+        t.Errorf("expect test abd test get %s", b)
+    }
+    b = restrainTrim([]byte("        \t\t\ntest\n\n\t\t     abd    \r       test      \t"))
+    if string(b) != "test abd test" {
+        t.Errorf("expect test abd test get %s", b)
+    }
+}

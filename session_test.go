@@ -126,3 +126,22 @@ func TestSelectInclude(t *testing.T)  {
         t.Errorf("expect 2 get %v", result)
     }
 }
+
+func TestSelectApp(t *testing.T)  {
+    p := Parameter{
+        "pro_id":1,
+        "publish":1,
+        "disable":0,
+        "parent_id":0,
+        "auditing":0,
+        "sub_type":1,
+        "pro_ver":"5.1.0",
+    }
+    results, err := testSession.Select("user.getAppList", p)
+    if err != nil {
+        t.Error(err.Error())
+    }
+    for k, v := range results {
+        fmt.Println(k, "=>", v)
+    }
+}

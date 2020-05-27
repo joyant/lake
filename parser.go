@@ -66,7 +66,12 @@ func (s *stack)len() int {
 }
 
 func (s *stack)Parse() (stmt []byte, err error) {
-    return s.parse(0, s.len()-1)
+    stmt, err = s.parse(0, s.len()-1)
+    if err != nil {
+        return
+    }
+    stmt = restrainTrim(stmt)
+    return
 }
 
 func (s *stack)parse(from, to int) (sql []byte, err error) {
@@ -352,4 +357,22 @@ func hasMap(value reflect.Value) bool {
     default:
         return false
     }
+}
+
+// restrainTrim replace successive ' ', '\t', '\n', '\r' with '', also trim space before and after bs
+func restrainTrim(bs []byte) []byte {
+    buff := bytes.Buffer{}
+    var b byte
+    for i, l := 0, len(bs); i < l; i++{
+        switch bs[i] {
+        case ' ', '\n', '\t', '\r':
+            if b > 0 && b != ' ' && b != '\n' && b != '\t' && b != '\r' {
+                buff.WriteByte(' ')
+            }
+        default:
+            buff.WriteByte(bs[i])
+        }
+        b = bs[i]
+    }
+    return bytes.TrimSpace(buff.Bytes())
 }
