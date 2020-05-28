@@ -1,4 +1,13 @@
 <mapper namespace="opn">
+    <select id="dict">
+        select key_value from erp_dict where
+        <if test="type != empty">
+            type = #{type}
+        </if>
+        <if test="key_code != empty">
+            and key_code = #{key_code}
+        </if>
+    </select>
     <select id="search">
         select tmp.*, group_concat(distinct rd.type) as m_types from ( select distinct l.id,
         l.id lesson_id, l.name, l.name lesson_name, l.abstract, l.cover, l.config_name, lv.level,

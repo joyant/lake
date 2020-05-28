@@ -1,6 +1,7 @@
 package lake
 
 import (
+    rawSQL "database/sql"
     "errors"
     "github.com/jmoiron/sqlx"
     "time"
@@ -77,6 +78,9 @@ func (s *mySQLSession)Select(key string, argv Parameter) (results []Result, err 
         logger.Infof("debug mode, stmt:%s\nparams:%v\n", s.builder.lastSQL(sql, params), params)
     }
     rows, err := s.db.Queryx(sql, params...)
+    if err == rawSQL.ErrNoRows {
+        err = nil
+    }
     if err != nil {
         return nil, err
     }
@@ -120,6 +124,9 @@ func (s *mySQLSession)SelectOne(key string, argv Parameter) (result Result, err 
     rows := s.db.QueryRowx(sql, params...)
     result = make(Result)
     err = rows.MapScan(result)
+    if err == rawSQL.ErrNoRows {
+        err = nil
+    }
     if err != nil {
         return nil, err
     }

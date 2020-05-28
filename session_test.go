@@ -146,3 +146,27 @@ func TestSelectApp(t *testing.T)  {
         fmt.Println(k, "=>", v)
     }
 }
+
+func TestSelectDict(t *testing.T)  {
+    p := Parameter{
+        "type":"opern_src_types2",
+        "key_code":"d_video",
+    }
+    result, err := testSession.SelectOne("opn.dict", p)
+    if err != nil {
+        t.Error(err.Error())
+    }
+    fmt.Println(result)
+}
+
+func TestSelectDict2(t *testing.T)  {
+    p := Parameter{
+        "type":"opern_src_types2",
+        "key_code":"d_video",
+    }
+    result, err := testSession.Select("opn.dict", p)
+    if err != nil {
+        t.Error(err.Error())
+    }
+    fmt.Println(result)
+}
