@@ -151,3 +151,27 @@ func TestEvalTest(t *testing.T)  {
         t.Errorf("expect true get false")
     }
 }
+
+func TestEqualNilAndEmpty(t *testing.T)  {
+    if equalNilAndEmpty("test", "nil", Parameter{}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "nil", Parameter{"test":nil}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "empty", Parameter{}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "empty", Parameter{"test":0}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "empty", Parameter{"test":""}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "empty", Parameter{"test":false}) != true {
+        t.Errorf("expect true get false")
+    }
+    if equalNilAndEmpty("test", "empty", Parameter{"test":"0"}) != true {
+        t.Errorf("expect true get false")
+    }
+}

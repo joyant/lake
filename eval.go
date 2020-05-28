@@ -124,25 +124,20 @@ func equalValue(key, value string, params Parameter) bool {
     return a == b
 }
 
+// value must be empty or nil
 func equalNilAndEmpty(key, value string, params Parameter) bool {
     if v, ok := params[key]; ok {
-        vs := fmt.Sprintf("%v", v)
-        if value == "empty" {
-            return vs == "" ||
-                vs == "0" ||
-                (reflect.TypeOf(v).Kind().String() == "bool" && v.(bool) == false) ||
-                vs == "[]" ||
-                vs == "map[]"
-        } else if value == "nil" {
-            return false
-        } else {
-            return vs == value
-        }
-    } else {
-        if value == "empty" {
+        if v == nil {
             return true
         }
-        return value == "nil"
+        vs := fmt.Sprintf("%v", v)
+        return vs == "" ||
+            vs == "0" ||
+            (reflect.TypeOf(v).Kind() == reflect.Bool && v.(bool) == false) ||
+            vs == "[]" ||
+            vs == "map[]"
+    } else {
+        return true
     }
 }
 
