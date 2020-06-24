@@ -173,12 +173,38 @@ func TestSelectDict2(t *testing.T)  {
 
 func TestExportDB_InsertMap(t *testing.T)  {
     p := Parameter{
-        "type":"test123",
-        "key_code":"d_video",
+        "type":"my_test",
+        "key_code":"123",
     }
-    a, b, err := testSession.DB().InsertMap("erp_dict", p)
+    a, _, err := testSession.DB().InsertMap("erp_dict", p)
     if err != nil {
         t.Error(err.Error())
     }
-    fmt.Println(a, b)
+    if a != 1 {
+        t.Error("expected 1 got", a)
+    }
+}
+
+func TestExportDB_UpdateTable(t *testing.T) {
+   a, err := testSession.DB().UpdateTable("a", Parameter{"id":4}, Parameter{"name":"b"})
+   if err != nil {
+       t.Error(err.Error())
+   }
+   if a != 1 {
+       t.Error("expected 1 got", a)
+   }
+}
+
+func TestExportDB_NamedExec(t *testing.T) {
+    result, err := testSession.DB().NamedExec("update a set name = :name where id = :id", map[string]interface{}{"name":"c", "id":4})
+    if err != nil {
+        t.Error(err)
+    }
+    a, err := result.RowsAffected()
+    if err != nil {
+        t.Error(err)
+    }
+    if a != 1 {
+        t.Error("expected 1 got ", a)
+    }
 }

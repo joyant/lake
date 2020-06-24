@@ -19,3 +19,13 @@ func panicErrNotNil(err error)  {
         panic(err)
     }
 }
+
+func merge(args ...Parameter) Parameter {
+    p := Parameter{}
+    for _, arg := range args {
+        for k, v := range arg {
+            p[k] = v
+        }
+    }
+    return p
+}

@@ -10,6 +10,8 @@ import (
 
 type DB interface{
     InsertMap(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)
+    UpdateTable(table string, where, params Parameter) (rowsAffected int64, err error)
+    NamedExec(query string, arg interface{}) (rawSQL.Result, error)
 }
 
 type exportDB struct {
@@ -23,9 +25,7 @@ func (e *exportDB)InsertMap(table string, params Parameter) (rowsAffected, lastI
         keys = append(keys, k)
     }
     builder := strings.Builder{}
-    builder.WriteString("insert into ")
-    builder.WriteString(table)
-    builder.WriteByte('(')
+    builder.WriteString("insert into " + table + "(")
     for k, v := range keys {
         builder.WriteString(v)
         if k != len(keys)-1 {
@@ -57,6 +57,39 @@ func (e *exportDB)InsertMap(table string, params Parameter) (rowsAffected, lastI
     }
     lastInsertID, err = result.LastInsertId()
     return
+}
+
+func (e *exportDB)NamedExec(query string, arg interface{}) (rawSQL.Result, error)  {
+    return e.db.NamedExec(query, arg)
+}
+
+func (e *exportDB)UpdateTable(table string, where, params Parameter) (rowsAffected int64, err error) {
+    builder := strings.Builder{}
+    builder.WriteString("update " + table + " set ")
+    index := 0
+    for k := range params {
+        builder.WriteString(k + "=:" + k)
+        if index != len(params)-1 {
+            builder.WriteByte(',')
+        }
+        index ++
+    }
+    builder.WriteString(" where ")
+    index2 := 0
+    for k := range where {
+        builder.WriteString(k + "=:" + k)
+        if index2 != len(params)-1 {
+            builder.WriteString(" and ")
+        }
+        index2 ++
+    }
+    var result rawSQL.Result
+    SQL := builder.String()
+    result, err = e.db.NamedExec(SQL, map[string]interface{}(merge(where, params)))
+    if err != nil {
+        return
+    }
+    return result.RowsAffected()
 }
 
 type Session interface{
