@@ -394,3 +394,91 @@ func TestRestrainTrim(t *testing.T)  {
         t.Errorf("expect test abd test get %s", b)
     }
 }
+
+func TestCollection(t *testing.T)  {
+    sk, err := ms.find("collection.getAppCollections")
+    if err != nil {
+        t.Errorf("find collection.getAppCollections err:%v", err)
+    }
+    sk.params = Parameter{
+        "pro_id":1,
+        "pro_ver":"5.1.0",
+        "pageSize":5,
+        "keyword":"%宝贝%",
+        "page":0,
+        "category_id":0,
+        "disable":0,
+        "withCollection":true,
+        "auditing":0,
+        "publish":1,
+        "searchAuthor":true,
+        "sub_type":1,
+        "level":-1,
+    }
+    stmt, err := sk.Parse()
+    if err != nil {
+        t.Errorf("parse err:%v", err)
+    }
+    builder := mySQLBuilder{}
+    sql, params, err := builder.build(stmt, sk.params)
+    if err != nil {
+        t.Errorf("build err:%v", err)
+    }
+    fmt.Println("sql:", sql)
+    fmt.Println("params:", params)
+    fmt.Println("last sql:", builder.lastSQL(sql, params))
+}
+
+func TestCollectionSubCount(t *testing.T)  {
+    sk, err := ms.find("collection_sub.getCountOperns")
+    if err != nil {
+        t.Errorf("find collection_sub.getCountOperns err:%v", err)
+    }
+    sk.params = Parameter{
+        "pro_id":1,
+        "pro_ver":"5.1.0",
+        "pageSize":5,
+        "page":1,
+        "collection_id":1,
+        "sub_type":0,
+    }
+    stmt, err := sk.Parse()
+    if err != nil {
+        t.Errorf("parse err:%v", err)
+    }
+    builder := mySQLBuilder{}
+    sql, params, err := builder.build(stmt, sk.params)
+    if err != nil {
+        t.Errorf("build err:%v", err)
+    }
+    fmt.Println("sql:", sql)
+    fmt.Println("params:", params)
+    fmt.Println("last sql:", builder.lastSQL(sql, params))
+}
+
+func TestCollectionSub(t *testing.T)  {
+    sk, err := ms.find("collection_sub.getOperns")
+    if err != nil {
+        t.Errorf("find collection_sub.getOperns err:%v", err)
+    }
+    sk.params = Parameter{
+        "pro_id":1,
+        "pro_ver":"5.1.0",
+        "pageSize":5,
+        "page":1,
+        "collection_id":1,
+        "sub_type":0,
+    }
+    stmt, err := sk.Parse()
+    if err != nil {
+        t.Errorf("parse err:%v", err)
+    }
+    builder := mySQLBuilder{}
+    sql, params, err := builder.build(stmt, sk.params)
+    if err != nil {
+        t.Errorf("build err:%v", err)
+    }
+    fmt.Println("sql:", sql)
+    fmt.Println("params:", params)
+    fmt.Println("last sql:", builder.lastSQL(sql, params))
+}

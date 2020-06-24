@@ -259,16 +259,11 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
         err = errorF(errNeedCollectionAttr, a.name)
         return
     }
-    // return back if collection is nil, not exist is not a error
-    if _, ok := s.params[co]; !ok {
+    // return back if collection is nil or not exist
+    if cov, ok := s.params[co]; !ok || cov == nil {
         return nil, nil
     }
-
     likeSlice := s.params[co] // maybe it is a slice, so named likeSlice
-    buff := bytes.Buffer{}
-    inner := s.nodes[from+1].content
-    item := []byte(fmt.Sprintf("#{%s}", attrMap.get("item", "item")))
-    item2 := []byte(fmt.Sprintf("${%s}", attrMap.get("item", "item")))
     if reflect.TypeOf(likeSlice).Kind().String() != "slice" {
         return nil, errorF(errNeedSlice, a.name)
     }
@@ -276,6 +271,12 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
     if sliceLen == 0 {
         return nil, nil
     }
+
+    buff := bytes.Buffer{}
+    inner := s.nodes[from+1].content
+    item := []byte(fmt.Sprintf("#{%s}", attrMap.get("item", "item")))
+    item2 := []byte(fmt.Sprintf("${%s}", attrMap.get("item", "item")))
+
     if hasMap(reflect.ValueOf(likeSlice)) {
         keys := findPlaceholder(inner)
         for i, l := 0, sliceLen; i < l; i++ {
@@ -285,7 +286,7 @@ func (s *stack)parseForeach(from, to int) (sql []byte, err error) {
             for _, keyValue := range keys {
                 _, value := splitKeyValue([]byte(keyValue))
                 if value == nil {
-                    return nil, errors.New("need format like item.key")
+                    return nil, errors.New("need format like item.key, need slice, maybe parameter type is map")
                 }
                 bs = bytes.Replace(bs, []byte("#{"+keyValue+"}"), []byte(fmt.Sprintf("#{%s.%d.%s}", co, i, value)), -1)
                 bs = bytes.Replace(bs, []byte("${"+keyValue+"}"), []byte(fmt.Sprintf("${%s.%d.%s}", co, i, value)), -1)

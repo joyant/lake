@@ -170,3 +170,15 @@ func TestSelectDict2(t *testing.T)  {
     }
     fmt.Println(result)
 }
+
+func TestExportDB_InsertMap(t *testing.T)  {
+    p := Parameter{
+        "type":"test123",
+        "key_code":"d_video",
+    }
+    a, b, err := testSession.DB().InsertMap("erp_dict", p)
+    if err != nil {
+        t.Error(err.Error())
+    }
+    fmt.Println(a, b)
+}

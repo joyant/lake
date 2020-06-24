@@ -4,4 +4,6 @@
     <mapper resource="./test/update.xml" />
     <mapper resource="./test/delete.xml" />
     <mapper resource="./test/opn.xml" />
+    <mapper resource="./test/collection.xml" />
+    <mapper resource="./test/collection_sub.xml" />
 </mappers>

@@ -1,0 +1,82 @@
+<mapper namespace="collection">
+    <select id="collectionWhere">
+        from opn_collection c
+        left join opn_collection_level cl on cl.pro_id = #{pro_id} and cl.collection_id = c.id
+        left join opn_category_collection cc on (not #{category_id} or #{category_id} and cc.category_id = #{category_id})
+        and cc.collection_id = c.id
+        left join opn_category g on g.id = cc.category_id
+        and g.pro_id = #{pro_id} and g.disable = #{disable}
+        and (not #{auditing} or #{auditing} and g.auditing &amp; #{pro_id} = #{pro_id})
+        and (not #{publish} or #{publish} and g.publish &amp; #{pro_id} = #{pro_id})
+        left join opn_artist a on a.id = c.artist_id
+        left join opn_collection_sub s on s.collection_id = c.id and s.sub_type = #{sub_type}
+        left join opn_lesson l on s.sub_id = l.id and l.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{publish} or #{publish} and l.publish &amp; #{pro_id} = #{pro_id})
+        and (not #{auditing} or #{auditing} and l.auditing &amp; #{pro_id} = #{pro_id})
+        left join opn_pro_pack_config p on p.pro_id = g.pro_id
+        left join opn_prores_config f on f.prod_id = #{pro_id} and f.prod_ver = #{pro_ver} and f.res_type = p.dynamic_type
+        left join opn_resource r on r.parent_type = s.sub_type and r.parent_id = s.sub_id and r.type = p.dynamic_type
+        and r.disable = #{disable} and r.ver between ifnull(f.res_min_ver, 0) and ifnull(f.res_max_ver, 999999999)
+        where c.pro_priv &amp; #{pro_id} = #{pro_id}
+        and (not #{category_id} or #{category_id} and g.id = #{category_id})
+        and (not #{auditing} or #{auditing} and c.auditing &amp; #{pro_id} = #{pro_id})
+        and (not #{publish} or #{publish} and c.publish &amp; #{pro_id} = #{pro_id})
+        <if test="collectionIds != empty">
+            and c.id in
+            <foreach collection="collectionIds">#{item}</foreach>
+        </if>
+        <if test="keyword != empty">
+            <if test="searchAuthor != empty">
+                and (c.keyword like #{keyword} or a.keyword like #{keyword} )
+            </if>
+            <if test="searchAuthor == empty">
+                and c.keyword like #{keyword}
+            </if>
+        </if>
+    </select>
+    <!--collections-->
+    <select id="getAppCollections">
+        select tmp.*, group_concat(distinct rd.type) as m_types from (select distinct c.id, c.name, c.cover, c.abstract,
+        c.artist_id, a.name artist_name, c.press, c.author, s.sub_type,s.sub_id,
+        case when count(distinct case when l.auditing &amp; #{pro_id} = #{pro_id} then l.id else null end) > 0 then true else false end auditing,
+        case when count(distinct case when l.publish &amp; #{pro_id} = #{pro_id} then l.id else null end) > 0 then true else false end publish,
+        case when count(distinct case when l.freeflag &amp; #{pro_id} = #{pro_id} then l.id else null end) > 0 then true else false end freeflag,
+        case when count(distinct r.id) > 0 then true else false end dynamic,
+        count(distinct l.id) lesson_count,
+        group_concat(distinct g.id) category_id,
+        group_concat(distinct g.name) category_name,
+        cc.sort, ifnull(cl.level, 0) level
+        <include refid="collectionWhere" />
+        group by c.id ) tmp
+        left join opn_prores_config fd on fd.prod_id = #{pro_id} and fd.prod_ver = #{pro_ver}
+        left join opn_resource rd on rd.parent_type = tmp.sub_type and rd.parent_id = tmp.sub_id and rd.disable = #{disable}
+        and (fd.res_type is null or rd.type is null or rd.type = fd.res_type) and rd.ver between ifnull(fd.res_min_ver, 0) and ifnull(fd.res_max_ver, 999999999)
+        <if test="newTypeFlagArr != empty">
+            and rd.type in
+            <foreach collection="newTypeFlagArr">#{item}</foreach>
+        </if>
+        group by tmp.id
+        <if test="sortedLevels != nil">
+            order by field(IFNULL(tmp.level, 0)),
+            <foreach collection="sortedLevels">#{item}</foreach>
+            ,tmp.sort ASC
+        </if>
+        <if test="sortedLevels == nil">
+            order by tmp.sort ASC
+        </if>
+        limit ${page}, ${pageSize}
+    </select>
+    <!--collection count-->
+    <select id="getAppCollectionCount">
+        select count(distinct c.id) count <include refid="collectionWhere" />
+    </select>
+    <!--collection img-->
+    <select id="getCollectionImg">
+        select img, collection_id from opn_collection_img where
+        status = #{status}
+        <if test="collectionIds != empty">
+            and collection_id in
+            <foreach collection="collectionIds">#{item}</foreach>
+        </if>
+    </select>
+</mapper>

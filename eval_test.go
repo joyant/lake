@@ -150,6 +150,9 @@ func TestEvalTest(t *testing.T)  {
     if !evalTest("len(a) < 2", Parameter{"a":[]int{1}}) {
         t.Errorf("expect true get false")
     }
+    if !evalTest("page > 0", Parameter{"page":1}) {
+        t.Errorf("expect true get false")
+    }
 }
 
 func TestEqualNilAndEmpty(t *testing.T)  {
@@ -172,6 +175,12 @@ func TestEqualNilAndEmpty(t *testing.T)  {
         t.Errorf("expect true get false")
     }
     if equalNilAndEmpty("test", "empty", Parameter{"test":"0"}) != true {
+        t.Errorf("expect true get false")
+    }
+}
+
+func TestEmpty(t *testing.T)  {
+    if !evalTest("withCollection != empty", Parameter{"withCollection": true}) {
         t.Errorf("expect true get false")
     }
 }

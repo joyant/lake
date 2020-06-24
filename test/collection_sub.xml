@@ -1,0 +1,23 @@
+<mapper namespace="collection_sub">
+    <select id="where1">
+        from opn_collection_sub cs
+        inner join opn_collection c on c.id = cs.collection_id
+        inner join opn_opern o on o.id = cs.sub_id
+        left join opn_artist a on a.id = o.artist_id
+        left join opn_level l on l.id = o.level_id
+        where cs.sub_type = #{sub_type}
+        and cs.collection_id = #{collection_id}
+        order by cs.sort asc
+    </select>
+    <select id="getOperns">
+        select o.id, o.name, o.artist_id, o.level_id, o.abstract,
+        a.name artist_name, l.name level_name
+        <include refid="where1" />
+        <if test="page > 0">
+            limit ${page}, ${pageSize}
+        </if>
+    </select>
+    <select id="getCountOperns">
+        select count(o.id) count <include refid="where1" />
+    </select>
+</mapper>
