@@ -9,7 +9,8 @@ import (
 )
 
 type DB interface{
-    InsertMap(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)
+    InsertTable(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)
+    BatchInsertTable(table string, params []Parameter) (rowsAffected, lastInsertID int64, err error)
     UpdateTable(table string, where, params Parameter) (rowsAffected int64, err error)
     NamedExec(query string, arg interface{}) (rawSQL.Result, error)
 }
@@ -19,7 +20,7 @@ type exportDB struct {
     db *sqlx.DB
 }
 
-func (e *exportDB)InsertMap(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)  {
+func (e *exportDB)InsertTable(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)  {
     keys := make([]string, 0, len(params))
     for k := range params {
         keys = append(keys, k)
@@ -61,6 +62,58 @@ func (e *exportDB)InsertMap(table string, params Parameter) (rowsAffected, lastI
 
 func (e *exportDB)NamedExec(query string, arg interface{}) (rawSQL.Result, error)  {
     return e.db.NamedExec(query, arg)
+}
+
+func (e *exportDB)BatchInsertTable(table string, params []Parameter) (rowsAffected, lastInsertID int64, err error) {
+    if len(params) == 0 {
+        err = errors.New("params length must greater than zero")
+        return
+    }
+    param := params[0]
+    keys := make([]string, 0, len(param))
+    for k := range param {
+        keys = append(keys, k)
+    }
+    builder := strings.Builder{}
+    builder.WriteString("insert into " + table + "(")
+    for k, v := range keys {
+        builder.WriteString(v)
+        if k != len(keys)-1 {
+            builder.WriteByte(',')
+        }
+    }
+    builder.WriteString(") values")
+    var args = make([]interface{}, 0, len(params)*len(param))
+    for k, param := range params {
+        builder.WriteByte('(')
+        for kk, v := range keys {
+            builder.WriteByte('?')
+            if kk != len(keys)-1 {
+                builder.WriteByte(',')
+            }
+            args = append(args, param[v])
+        }
+        builder.WriteByte(')')
+        if k != len(params)-1 {
+            builder.WriteByte(',')
+        }
+    }
+    SQL := builder.String()
+    if e.option.Mode == ModeDebug {
+        logger.Infof("debug mode statement:%s", SQL)
+        logger.Infof("params:%v", params)
+    }
+    var result rawSQL.Result
+    result, err = e.db.Exec(SQL, args...)
+    if err != nil {
+        return
+    }
+    rowsAffected, err = result.RowsAffected()
+    if err != nil {
+        return
+    }
+    lastInsertID, err = result.LastInsertId()
+    return
 }
 
 func (e *exportDB)UpdateTable(table string, where, params Parameter) (rowsAffected int64, err error) {

@@ -176,7 +176,7 @@ func TestExportDB_InsertMap(t *testing.T)  {
         "type":"my_test",
         "key_code":"123",
     }
-    a, _, err := testSession.DB().InsertMap("erp_dict", p)
+    a, _, err := testSession.DB().InsertTable("erp_dict", p)
     if err != nil {
         t.Error(err.Error())
     }
@@ -207,4 +207,25 @@ func TestExportDB_NamedExec(t *testing.T) {
     if a != 1 {
         t.Error("expected 1 got ", a)
     }
+}
+
+func TestExportDB_BatchInsertTable(t *testing.T) {
+    ps := []Parameter{{
+        "name":"x",
+        "age":1,
+    },{
+        "name":"y",
+        "age":2,
+    },{
+        "name":"z",
+        "age":3,
+    }}
+    a, b, err := testSession.DB().BatchInsertTable("a", ps)
+    if err != nil {
+        t.Error(err)
+    }
+    if a != 3 {
+        t.Error("expected 3 got", a)
+    }
+    _ = b // b should be max id
 }
