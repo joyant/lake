@@ -13,11 +13,58 @@ type DB interface{
     BatchInsertTable(table string, params []Parameter) (rowsAffected, lastInsertID int64, err error)
     UpdateTable(table string, where, params Parameter) (rowsAffected int64, err error)
     NamedExec(query string, arg interface{}) (rawSQL.Result, error)
+    QueryMapSlice(query string, args ...interface{}) ([]Result, error)
+    QueryMap(query string, args ...interface{}) (Result, error)
 }
 
 type exportDB struct {
     option *Option
     db *sqlx.DB
+}
+
+func (e *exportDB)QueryMapSlice(query string, args ...interface{}) (results []Result, err error) {
+    rows, err := e.db.Queryx(query, args...)
+    if err == rawSQL.ErrNoRows {
+        err = nil
+    }
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    for rows.Next() {
+        m := make(Result)
+        err = rows.MapScan(m)
+        if err != nil {
+            return nil, err
+        }
+        for k, v := range m {
+            switch v.(type) {
+            case []uint8:
+                m[k] = string(v.([]uint8))
+            }
+        }
+        results = append(results, m)
+    }
+    return
+}
+
+func (e *exportDB)QueryMap(query string, args ...interface{}) (Result, error) {
+    row := e.db.QueryRowx(query, args...)
+    m := make(Result)
+    err := row.MapScan(m)
+    if err == rawSQL.ErrNoRows {
+        err = nil
+    }
+    if err != nil {
+        return nil, err
+    }
+    for k, v := range m {
+        switch v.(type) {
+        case []uint8:
+            m[k] = string(v.([]uint8))
+        }
+    }
+    return m, nil
 }
 
 func (e *exportDB)InsertTable(table string, params Parameter) (rowsAffected, lastInsertID int64, err error)  {

@@ -229,3 +229,21 @@ func TestExportDB_BatchInsertTable(t *testing.T) {
     }
     _ = b // b should be max id
 }
+
+func TestExportDB_QueryMapSlice(t *testing.T) {
+    records, err := testSession.DB().QueryMapSlice( "select * from opn_resource where id < 0 limit ?", 1)
+    if err != nil {
+        t.Error(err)
+    } else {
+        fmt.Println(records)
+    }
+}
+
+func TestExportDB_QueryMap(t *testing.T) {
+    records, err := testSession.DB().QueryMap( "select * from opn_resource where id < 0 limit ?", 1)
+    if err != nil {
+        t.Error(err)
+    } else {
+        fmt.Println(records)
+    }
+}
